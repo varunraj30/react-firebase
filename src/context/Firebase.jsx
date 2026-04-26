@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -9,16 +9,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { getDatabase, set, ref } from "firebase/database";
+import { getDatabase, set, ref, child, get, onValue } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBXFu39S9lR-WlMJvdtty3e5lGyyr0PjCk",
-  authDomain: "app-84441.firebaseapp.com",
-  projectId: "app-84441",
-  storageBucket: "app-84441.firebasestorage.app",
-  messagingSenderId: "99729895882",
-  appId: "1:99729895882:web:f549b69df0b071d8511f33",
-  databaseURL: "https://app-84441-default-rtdb.firebaseio.com/",
+  // KEYS
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -31,6 +25,8 @@ const FirebaseContext = createContext(null);
 export const useFirebase = () => useContext(FirebaseContext);
 
 export const FirebaseProvider = (props) => {
+  const [name, setName] = useState(null);
+
   const signupUserWithEmail = (email, password) => {
     return createUserWithEmailAndPassword(firebaseAuth, email, password);
   };
@@ -41,6 +37,9 @@ export const FirebaseProvider = (props) => {
   const signUpWithGoogle = () => {
     signInWithPopup(firebaseAuth, googleProvider);
   };
+
+  // users is path eg: users/hyd
+  // get(child(ref(firebaseDB), "users")).then((snap) => console.log(snap.val()));
 
   const loginUser = async (email, password) => {
     const userCreds = await signInWithEmailAndPassword(
@@ -61,6 +60,10 @@ export const FirebaseProvider = (props) => {
     });
   };
 
+  useEffect(() => {
+    onValue(ref(firebaseDB, "users"), (snap) => setName(snap.val().name));
+  }, []);
+
   return (
     <FirebaseContext.Provider
       value={{
@@ -72,6 +75,7 @@ export const FirebaseProvider = (props) => {
         signOutUser,
       }}
     >
+      <h3>Name is {name}</h3>
       {props.children}
     </FirebaseContext.Provider>
   );
